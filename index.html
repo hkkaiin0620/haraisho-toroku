@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>給与明細 お届け先登録</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  body { font-family: sans-serif; padding: 24px; text-align: center; }
+  input { font-size: 16px; padding: 10px; width: 85%; margin: 12px 0; box-sizing: border-box; }
+  button { font-size: 16px; padding: 10px 28px; background: #06c755; color: #fff; border: none; border-radius: 6px; }
+  button:disabled { background: #ccc; }
+  #msg { margin-top: 16px; color: #555; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <h3>給与明細 お届け先登録</h3>
+  <p>給与明細に記載されているお名前(フルネーム)を入力して、登録ボタンを押してください。</p>
+  <input type="text" id="name" placeholder="例: 山田 太郎">
+  <br>
+  <button id="btn" onclick="submitName()" disabled>登録する</button>
+  <div id="msg">LINEの情報を読み込んでいます...</div>
+
+<script>
+  // ↓LIFFアプリを作成した後、発行されたLIFF IDに書き換えてください
+  var LIFF_ID = '2012167154-Bmq859FG';
+
+  // ↓Apps ScriptのウェブアプリURL(.../exec)に書き換えてください
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbySZkSjIrQkuQqBgzKgZy4YsJX608rSxe7hJ5m0yE_4ke1QngvcTxNwFs0bTNrQg4Fm/exec';
+
+  var userId = null;
+
+  liff.init({ liffId: LIFF_ID }).then(function () {
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+    return liff.getProfile();
+  }).then(function (profile) {
+    if (profile) {
+      userId = profile.userId;
+      document.getElementById('msg').innerText = '準備ができました。お名前を入力して登録してください。';
+      document.getElementById('btn').disabled = false;
+    }
+  }).catch(function (err) {
+    document.getElementById('msg').innerText = '読み込みエラーが発生しました: ' + err;
+  });
+
+  function submitName() {
+    var name = document.getElementById('name').value.trim();
+    if (!name) {
+      document.getElementById('msg').innerText = 'お名前を入力してください。';
+      return;
+    }
+    if (!userId) {
+      document.getElementById('msg').innerText = 'LINEの情報が取得できていません。少し待ってからもう一度お試しください。';
+      return;
+    }
+    document.getElementById('msg').innerText = '登録中...';
+    document.getElementById('btn').disabled = true;
+
+    fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ name: name, userId: userId })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.status === 'ok') {
+          document.getElementById('msg').innerText = '登録が完了しました。このページを閉じて大丈夫です。';
+        } else {
+          document.getElementById('msg').innerText = 'エラー: ' + (data.message || '登録に失敗しました');
+          document.getElementById('btn').disabled = false;
+        }
+      })
+      .catch(function (err) {
+        document.getElementById('msg').innerText = '通信エラー: ' + err;
+        document.getElementById('btn').disabled = false;
+      });
+  }
+</script>
+</body>
+</html>
