@@ -8,6 +8,7 @@
 <style>
   body { font-family: sans-serif; padding: 24px; text-align: center; }
   input { font-size: 16px; padding: 10px; width: 85%; margin: 12px 0; box-sizing: border-box; }
+  label { display: block; text-align: left; width: 85%; margin: 0 auto; font-size: 13px; color: #555; }
   button { font-size: 16px; padding: 10px 28px; background: #06c755; color: #fff; border: none; border-radius: 6px; }
   button:disabled { background: #ccc; }
   #msg { margin-top: 16px; color: #555; white-space: pre-wrap; }
@@ -15,17 +16,20 @@
 </head>
 <body>
   <h3>給与明細 お届け先登録</h3>
-  <p>給与明細に記載されているお名前(フルネーム)を入力して、登録ボタンを押してください。</p>
+  <p>給与明細に記載されているお名前(フルネーム)と、生年月日を入力して、登録ボタンを押してください。</p>
+
+  <label for="name">お名前(フルネーム)</label>
   <input type="text" id="name" placeholder="例: 山田 太郎">
+
+  <label for="birthdate">生年月日</label>
+  <input type="date" id="birthdate">
+
   <br>
   <button id="btn" onclick="submitName()" disabled>登録する</button>
   <div id="msg">LINEの情報を読み込んでいます...</div>
 
 <script>
-  // ↓LIFFアプリを作成した後、発行されたLIFF IDに書き換えてください
   var LIFF_ID = '2012167154-Bmq859FG';
-
-  // ↓Apps ScriptのウェブアプリURL(.../exec)に書き換えてください
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbySZkSjIrQkuQqBgzKgZy4YsJX608rSxe7hJ5m0yE_4ke1QngvcTxNwFs0bTNrQg4Fm/exec';
 
   var userId = null;
@@ -39,7 +43,7 @@
   }).then(function (profile) {
     if (profile) {
       userId = profile.userId;
-      document.getElementById('msg').innerText = '準備ができました。お名前を入力して登録してください。';
+      document.getElementById('msg').innerText = '準備ができました。お名前と生年月日を入力して登録してください。';
       document.getElementById('btn').disabled = false;
     }
   }).catch(function (err) {
@@ -48,8 +52,14 @@
 
   function submitName() {
     var name = document.getElementById('name').value.trim();
+    var birthdate = document.getElementById('birthdate').value;
+
     if (!name) {
       document.getElementById('msg').innerText = 'お名前を入力してください。';
+      return;
+    }
+    if (!birthdate) {
+      document.getElementById('msg').innerText = '生年月日を入力してください。';
       return;
     }
     if (!userId) {
@@ -62,7 +72,7 @@
     fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ name: name, userId: userId })
+      body: JSON.stringify({ name: name, birthdate: birthdate, userId: userId })
     })
       .then(function (res) { return res.json(); })
       .then(function (data) {
